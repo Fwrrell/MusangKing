@@ -1,12 +1,13 @@
+import "dotenv/config";
 import express from "express";
-import type { Request, Response } from "express";
+import authRouter from "./routes/authRoutes";
 
 const app = express();
 const PORT = 3000;
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello from Express + Typescript");
-});
+app.use(express.json());
+
+app.use("/api/auth", authRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running at ${PORT}`);
