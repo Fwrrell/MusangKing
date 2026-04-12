@@ -41,7 +41,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       token,
       data: {
         name: user.name,
+        email: user.email,
         role: user.role,
+        categoryId: user.categoryId,
       },
       message: "Login Success",
     });
@@ -55,10 +57,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
   try {
     const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (!existingUser) {
+    if (existingUser) {
       res
         .status(400)
         .json({ status: "error", message: "Email already exist." });
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 16);
@@ -74,13 +77,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       include: { category: true },
     });
 
-    res
-      .status(201)
-      .json({
-        status: "success",
-        newUser,
-        message: "User successfully created.",
-      });
+    res.status(201).json({
+      status: "success",
+      newUser,
+      message: "User successfully created.",
+    });
   } catch (err) {
     res.status(500).json({ message: "Internal server error.", err });
   }
