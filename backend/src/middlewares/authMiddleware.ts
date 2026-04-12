@@ -14,7 +14,7 @@ export const verifyToken = (
 ): void => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ message: "Access Denied. Token not Found" });
+    res.status(401).json({ message: "Access Denied, Token not Found." });
     return;
   }
 
@@ -26,5 +26,18 @@ export const verifyToken = (
     next();
   } catch (err) {
     res.status(403).json({ message: "Token is not valid or expired" });
+  }
+};
+
+export const isAdmin = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void => {
+  if (req.user && req.user.role === "admin") {
+    next();
+  } else {
+    res.status(403).json({ message: "Access denied, Admin only." });
+    return;
   }
 };

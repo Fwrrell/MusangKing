@@ -16,6 +16,7 @@ export const createCategory = async (
       data: {
         category,
       },
+      message: "Category successfully created.",
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error." });
@@ -36,6 +37,7 @@ export const getAllCategories = async (
       data: {
         categories,
       },
+      message: "Category successfully displayed.",
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error." });
@@ -72,6 +74,7 @@ export const updateCategory = async (
       data: {
         category: updatedCategory,
       },
+      message: "Category successfully updated.",
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error." });
@@ -102,6 +105,7 @@ export const deleteCategory = async (
       data: {
         deleteCategory,
       },
+      message: "Category successfully deleted.",
     });
   } catch (err) {
     res.status(500).json({ error: "Internal server error." });

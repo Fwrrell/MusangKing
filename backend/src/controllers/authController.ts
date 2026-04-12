@@ -14,14 +14,14 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       where: { email },
     });
     if (!user) {
-      res.status(401).json({ message: "Email not found." });
+      res.status(401).json({ status: "Error", message: "Email not found." });
       return;
     }
 
     // cek password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      res.status(401).json({ message: "Wrong Password" });
+      res.status(401).json({ status: "Error", message: "Wrong Password." });
       return;
     }
 
@@ -37,28 +37,53 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     );
 
     res.status(200).json({
-      message: "Login Success",
+      status: "success",
       token,
       data: {
         name: user.name,
         role: user.role,
       },
+      message: "Login Success",
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "An error occurred on the server" });
+    res.status(500).json({ message: "Internal server Error.", err });
   }
 };
 
 export const register = async (req: Request, res: Response): Promise<void> => {
-  const { name, email, password, role } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 16);
+  const { name, email, password, role, categoryId } = req.body;
 
-  const newUser = await prisma.user.create({
-    data: { name, email, password: hashedPassword, role },
-  });
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (!existingUser) {
+      res
+        .status(400)
+        .json({ status: "error", message: "Email already exist." });
+    }
 
-  res.status(201).json({ message: "User Created", newUser });
+    const hashedPassword = await bcrypt.hash(password, 16);
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        categoryId: categoryId || null,
+      },
+      include: { category: true },
+    });
+
+    res
+      .status(201)
+      .json({
+        status: "success",
+        newUser,
+        message: "User successfully created.",
+      });
+  } catch (err) {
+    res.status(500).json({ message: "Internal server error.", err });
+  }
 };
 
 module.exports = { login, register };
