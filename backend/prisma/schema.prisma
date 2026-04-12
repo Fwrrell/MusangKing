@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  categoryId String?
+  role       userRole
+  createdAt  DateTime @default(now())
+
+  category   Category?    @relation(fields: [categoryId], references: [id])
+  reportLogs Report_Log[]
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  color     String
+  createdAt DateTime @default(now())
+
+  users   User[]
+  reports Report[]
+}
+
+model Report {
+  id         String @id @default(uuid())
+  categoryId String
+
+  raw_description    String
+  latitude           Float
+  longitude          Float
+  image_url          String
+  reporter_device_id String
+
+  slug              String            @unique
+  ai_headline       String
+  description       String
+  estimated_cost    Decimal
+  moderation_status moderation_status
+  status            report_status
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  category   Category     @relation(fields: [categoryId], references: [id])
+  reportLogs Report_Log[]
+  votes      Vote[]
+}
+
+model Report_Log {
+  id         String        @id @default(uuid())
+  reportId   String
+  userId     String
+  notes      String
+  new_status report_status
+  createdAt  DateTime      @default(now())
+
+  report Report @relation(fields: [reportId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Vote {
+  id        String   @id @default(uuid())
+  reportId  String
+  device_id String
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id])
+
+  @@unique([reportId, device_id])
+}
+
+enum userRole {
+  admin
+  pemerintah
+}
+
+enum moderation_status {
+  pending
+  approved
+  rejected
+  flagged_for_review
+}
+
+enum report_status {
+  pending
+  verified
+  in_progress
+  resolved
+  rejected
+}

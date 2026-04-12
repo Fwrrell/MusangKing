@@ -13,8 +13,11 @@
     "dev": "nodemon ./src/index.ts"
   },
   "dependencies": {
+    "@prisma/client": "^7.7.0",
+    "dotenv": "^17.4.1",
     "express": "^5.2.1",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "prisma": "^7.7.0"
   },
   "keywords": [],
   "devDependencies": {
