@@ -120,3 +120,101 @@ export const createReport = async (
     res.status(500).json({ error: "Internal server error." });
   }
 };
+
+export const getPublicReports = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const reports = await prisma.report.findMany({
+      where: {
+        moderation_status: "approved",
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        category: true,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: { reports },
+      message: "Reports successfully displayed.",
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+export const getAdminReports = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const reports = await prisma.report.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        category: true,
+      },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: { reports },
+      message: "Reports successfully displayed.",
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+export const updateAdminReport = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params as { id: string };
+    const {
+      ai_headline,
+      description,
+      estimated_cost,
+      status,
+      moderation_status,
+    } = req.body;
+
+    const existingReport = await prisma.report.findUnique({ where: { id } });
+    if (!existingReport) {
+      res.status(404).json({ status: "error", message: "Report not found." });
+      return;
+    }
+
+    let updateData: any = {
+      description: description ?? existingReport.description,
+      estimated_cost: estimated_cost ?? existingReport.estimated_cost,
+      status: status ?? existingReport.status,
+      moderation_status: moderation_status ?? existingReport.moderation_status,
+    };
+
+    if (
+      moderation_status === "approved" &&
+      existingReport.moderation_status !== "approved"
+    ) {
+      const headline = ai_headline;
+      updateData.ai_headline = headline;
+      updateData.slug = `${headline.toLowerCase().replace(/ /g, "-")}-${Date.now()}`;
+    }
+
+    const updatedReport = await prisma.report.update({
+      where: { id },
+      data: updateData,
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: { report: updatedReport },
+      message: "Report updated.",
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
