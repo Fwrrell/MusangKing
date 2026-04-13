@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
+import { getDistance } from "../utils/geoutils";
 import { upImageReport } from "../services/storageService";
 import { analyzeReport } from "../services/geminiService";
 
@@ -15,27 +16,77 @@ export const createReport = async (
       longitude,
       reporter_device_id,
     } = req.body;
+
     const file = req.file;
+    const latNum = parseFloat(latitude);
+    const lonNum = parseFloat(longitude);
 
-    if (!file) {
-      res.status(404).json({ status: "error", message: "Photo is required." });
-      return;
-    }
-
-    const imageUrl = await upImageReport(file); // upload ke storage supabase (link public)
+    const imageUrl = await upImageReport(file!); // upload ke storage supabase (link public)
     const aiResult = await analyzeReport(raw_description, imageUrl); // hasil validasi oleh Gemini AI
-
-    // TODO: DELETE DEBUG
-    console.log("udah sampe sini cuy");
 
     // jika ai mendeteksi bukan laporan yang valid
     if (!aiResult.is_valid) {
+      const uniqueSlug = `rejected-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const newReport = await prisma.report.create({
+        data: {
+          categoryId,
+          raw_description,
+          latitude: latNum,
+          longitude: lonNum,
+          image_url: [imageUrl],
+          reporter_device_id,
+          slug: uniqueSlug,
+          ai_headline: "Report rejected by System",
+          description: aiResult.reason,
+          estimated_cost: 0,
+          moderation_status: "rejected",
+          status: "rejected",
+        },
+      });
+
       res.status(400).json({
         status: "rejected",
+        newReport,
         message: "Report rejected by system.",
-        reason: aiResult.reason,
       });
       return;
+    }
+
+    // cek laporan yang udah di approved, untuk keperluan cek jarak
+    const cekReports = await prisma.report.findMany({
+      where: {
+        categoryId,
+        moderation_status: "approved",
+      },
+    });
+
+    // dengan jarak max 250m
+    const existingReport = cekReports.find(
+      (report) =>
+        getDistance(latNum, lonNum, report.latitude, report.longitude) <= 250,
+    );
+
+    // kalo ada laporan terdekat (merge data nya)
+    if (existingReport) {
+      const currDescription = existingReport.description
+        .split("\n")
+        .filter((d) => d.trim() !== "");
+      const nextNum = currDescription.length + 1;
+      const appendDesc = `${existingReport.description}\n${nextNum}. ${aiResult.filtered_description}`;
+
+      const updateReport = await prisma.report.update({
+        where: { id: existingReport.id },
+        data: {
+          image_url: { push: imageUrl },
+          description: appendDesc,
+        },
+      });
+
+      res.status(200).json({
+        status: "success",
+        data: { report: updateReport },
+        message: "Report successfully merged with report nearby there.",
+      });
     }
 
     // jika lolos maka simpan laporannya ke database
@@ -45,9 +96,9 @@ export const createReport = async (
       data: {
         categoryId,
         raw_description,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
-        image_url: imageUrl,
+        latitude: latNum,
+        longitude: lonNum,
+        image_url: [imageUrl],
         reporter_device_id,
         slug: uniqueSlug,
         ai_headline: aiResult.headline,

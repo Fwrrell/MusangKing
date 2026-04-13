@@ -41,12 +41,12 @@ model Report {
   raw_description    String
   latitude           Float
   longitude          Float
-  image_url          String
+  image_url          String[]
   reporter_device_id String
 
   slug              String            @unique
   ai_headline       String
-  description       String
+  description       String            @db.Text
   estimated_cost    Decimal
   moderation_status moderation_status
   status            report_status
