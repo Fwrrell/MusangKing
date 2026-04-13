@@ -1,18 +1,21 @@
 import "dotenv/config";
 import express from "express";
-import authRouter from "./routes/authRoutes";
-import categoryRouter from "./routes/categoryRoutes";
-import reportRouter from "./routes/reportRoutes";
+import cors from "cors";
+
+import apiRouter from "./routes";
 
 const app = express();
-const PORT = 3000;
 
+app.use(cors());
 app.use(express.json());
 
-app.use("/api/auth", authRouter);
-app.use("/api/category", categoryRouter);
-app.use("/api/report", reportRouter);
+app.use("/api", apiRouter);
 
+app.use("*", (req, res) => {
+  res.status(404).json({ error: "Endpoint not found." });
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running at ${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}/api`);
 });

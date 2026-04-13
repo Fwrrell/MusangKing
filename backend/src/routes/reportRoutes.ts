@@ -11,11 +11,17 @@ import { isAdmin, verifyToken } from "../middlewares/authMiddleware";
 
 const reportRouter = Router();
 
-reportRouter.get("/", getPublicReports);
-reportRouter.post("/", upload.single("image"), createReport);
-reportRouter.post("/:id", toggleVote);
+const publicRouter = Router();
+publicRouter.get("/", getPublicReports);
+publicRouter.post("/", upload.single("image"), createReport);
+publicRouter.post("/:id/vote", toggleVote);
 
-reportRouter.get("/admin/report", verifyToken, isAdmin, getAdminReports);
-reportRouter.get("/admin/report/:id", verifyToken, isAdmin, updateAdminReport);
+const adminRouter = Router();
+adminRouter.use(verifyToken, isAdmin);
+adminRouter.get("/", getAdminReports);
+adminRouter.patch("/:id/update", updateAdminReport);
+
+reportRouter.use("/public", publicRouter);
+reportRouter.use("/admin", adminRouter);
 
 export default reportRouter;

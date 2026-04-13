@@ -4,7 +4,10 @@ import { verifyToken, isAdmin } from "../middlewares/authMiddleware";
 
 const authRouter = Router();
 
-authRouter.post("/login", login);
-authRouter.post("/register", verifyToken, isAdmin, register);
+const adminRouter = Router();
+adminRouter.post("/login", login);
+adminRouter.post("/register", verifyToken, isAdmin, register);
+
+authRouter.use("/admin", adminRouter);
 
 export default authRouter;

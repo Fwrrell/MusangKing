@@ -9,9 +9,16 @@ import { verifyToken, isAdmin } from "../middlewares/authMiddleware";
 
 const categoryRouter = Router();
 
-categoryRouter.post("/create", verifyToken, isAdmin, createCategory);
-categoryRouter.get("/", verifyToken, isAdmin, getAllCategories);
-categoryRouter.patch("/:id", verifyToken, isAdmin, updateCategory);
-categoryRouter.delete("/:id", verifyToken, isAdmin, deleteCategory);
+const publicRouter = Router();
+categoryRouter.get("/", getAllCategories);
+
+const adminRouter = Router();
+adminRouter.use(verifyToken, isAdmin);
+adminRouter.post("/create", createCategory);
+adminRouter.patch("/:id", updateCategory);
+adminRouter.delete("/:id", deleteCategory);
+
+categoryRouter.use("/public", publicRouter);
+categoryRouter.use("/admin", adminRouter);
 
 export default categoryRouter;
