@@ -15,22 +15,38 @@ async function urlToBiner(url: string) {
 }
 
 export const analyzeReport = async (description: string, imageUrl: string) => {
-  const prompt = `
-    Kamu adalah seorang asisten cerdas yang terbiasa untuk menganalisis Sistem Pelaporan Jalan Rusak.
-    Tugasmu adalah menganalisis input yang diberikan oleh warga sebagai pelapor:
-    1. Periksa apakah deskripsi mengandung kata kasar maupun SARA. Jika ya, modifikasi deskripsi nya agar tidak memiliki kata-kata tersebut tanpa menghilangkan intiinya. Jika tidak, kembalikan deskripsi tanpa mengubahnya sedikitpun.
-    2. Berdasarkan foto dan deskripsi (${description}), buatkan Headline (judul singkat) yang resmi.
-    3. Berikan estimasi biaya perbaikan dalam angka (IDR) sesuaikan juga dengan harga di daerah tersebut.
-    4. Validasi apakah foto tersebut benar-benar laporan jalan rusak, hal negatif/spam, dan mengandung teks yang menghalangi foto laporan tersebut (termasuk teks berukuran besar dalam gambar yang terindikasi sebagai meme), jika foto tersebut mengandung hal-hal tersebut maka laporan akan gagal (tidak valid).
+  // rules terpisah untuk validasi nya (roleplaying)
+  const rules = `
+    Kamu adalah sistem validasi otomatis untuk Pelaporan Jalan Rusak tingkat kota/kabupaten.
+    ATURAN MUTLAK VALIDASI GAMBAR:
+    Laporan WAJIB ditolak ("is_valid": false) jika gambar terindikasi sebagai meme.
+    Ciri-ciri meme yang HARUS ditolak:
+    1. Terdapat teks berukuran besar/mencolok yang disematkan langsung di atas atau bawah gambar (image macro).
+    2. Terdapat watermark lelucon, karakter kartun, atau stiker yang tidak relevan dengan foto pelaporan resmi.
+    3. Teks dalam gambar mengandung konteks bercanda atau sarkasme.
+    
+    PENTING: Sekalipun gambar tersebut menampilkan jalan yang benar-benar rusak parah, JIKA ada satu saja elemen meme di atas, kamu HARUS merespon "is_valid": false dengan alasan "Gambar mengandung elemen meme/suntingan yang tidak resmi".
+  `;
 
-    Balas hanya dalam format JSON:
+  // prompt untuk memvalidasi mengikuti rules
+  const prompt = `
+   Analisis laporan berikut:
+    Deskripsi Pengguna: "${description}"
+
+    Tugasmu:
+    1. Filter Deskripsi: Periksa kata kasar/SARA. Jika ada, perhalus tanpa mengubah inti. Jika bersih, kembalikan apa adanya.
+    2. Headline: Buatkan judul singkat yang resmi berdasarkan foto dan deskripsi.
+    3. Estimasi: Berikan estimasi biaya perbaikan (IDR) dalam bentuk angka.
+    4. Validasi: Tentukan apakah foto ini valid sesuai dengan aturan sistem.
+
+    Balas HANYA dengan JSON murni tanpa markdown json:
     {
       "is_valid": boolean,
       "headline": string,
       "filtered_description": string,
       "estimated_cost": number,
       "reason": string
-    }  
+    }
   `;
 
   // gambar dari Supabase
@@ -43,6 +59,7 @@ export const analyzeReport = async (description: string, imageUrl: string) => {
         model: "gemini-3-flash-preview",
         contents: [prompt, imagePart],
         config: {
+          systemInstruction: rules,
           responseMimeType: "application/json",
         },
       });
