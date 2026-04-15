@@ -218,3 +218,71 @@ export const updateAdminReport = async (
     res.status(500).json({ error: "Internal server error." });
   }
 };
+
+export const updateReportStatus = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { id } = req.params as { id: string };
+    const { status, notes } = req.body;
+
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      res.status(401).json({
+        status: "error",
+        message: "Unauthorized. ID user not found.",
+      });
+      return;
+    }
+
+    const existingReport = await prisma.report.findUnique({ where: { id } });
+    if (!existingReport) {
+      res.status(404).json({ status: "error", message: "Report not found." });
+      return;
+    }
+
+    // mencegah execute kosong
+    if (!status && !notes) {
+      res.status(400).json({
+        status: "error",
+        message: "Please provide either status or notes to update.",
+      });
+      return;
+    }
+
+    let updateData: any = {};
+    if (status) {
+      updateData.status = status;
+    }
+
+    // jika status kosong, gunakan status yang udah ada
+    const statusToLog = status ?? existingReport.status;
+    const logNotes = notes ?? "";
+
+    // pake transaction => jika log gagal, status laporan batal berubah
+    const [updatedReport, newLog] = await prisma.$transaction([
+      prisma.report.update({
+        where: { id },
+        data: updateData,
+      }),
+
+      prisma.report_Log.create({
+        data: {
+          reportId: id,
+          userId: userId,
+          notes: logNotes,
+          new_status: statusToLog,
+        },
+      }),
+    ]);
+
+    res.status(200).json({
+      status: "success",
+      message: "Report status and log successfully updated.",
+      data: { report: updatedReport, log: newLog },
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
