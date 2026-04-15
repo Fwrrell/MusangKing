@@ -1,13 +1,8 @@
 import { Router } from "express";
 import { login, register } from "../controllers/authController";
-import { verifyToken, isAdmin } from "../middlewares/authMiddleware";
 
-const authRouter = Router();
+export const authRouter = Router();
+authRouter.post("/login", login);
 
-const adminRouter = Router();
-adminRouter.post("/login", login);
-adminRouter.post("/register", verifyToken, isAdmin, register);
-
-authRouter.use("/admin", adminRouter);
-
-export default authRouter;
+export const adminAuthRouter = Router();
+adminAuthRouter.post("/register", register);

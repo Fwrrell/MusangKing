@@ -7,21 +7,12 @@ import {
 } from "../controllers/reportController";
 import { upload } from "../middlewares/uploadMiddleware";
 import { toggleVote } from "../controllers/voteController"; //upvote
-import { isAdmin, verifyToken } from "../middlewares/authMiddleware";
 
-const reportRouter = Router();
+export const reportRouter = Router();
+reportRouter.get("/", getPublicReports);
+reportRouter.post("/", upload.single("image"), createReport);
+reportRouter.post("/:id/vote", toggleVote);
 
-const publicRouter = Router();
-publicRouter.get("/", getPublicReports);
-publicRouter.post("/", upload.single("image"), createReport);
-publicRouter.post("/:id/vote", toggleVote);
-
-const adminRouter = Router();
-adminRouter.use(verifyToken, isAdmin);
-adminRouter.get("/", getAdminReports);
-adminRouter.patch("/:id/update", updateAdminReport);
-
-reportRouter.use("/public", publicRouter);
-reportRouter.use("/admin", adminRouter);
-
-export default reportRouter;
+export const adminReportRouter = Router();
+adminReportRouter.get("/", getAdminReports);
+adminReportRouter.patch("/:id", updateAdminReport);
