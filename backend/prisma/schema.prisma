@@ -12,16 +12,19 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  name       String
-  email      String   @unique
-  password   String
+  id         String    @id @default(uuid())
+  device_id  String    @unique
+  avatar_url String?
+  name       String?
+  email      String?   @unique
+  password   String?
   categoryId String?
-  role       userRole
-  createdAt  DateTime @default(now())
+  role       userRole?
+  createdAt  DateTime  @default(now())
 
-  category   Category?    @relation(fields: [categoryId], references: [id])
+  category   Category?      @relation(fields: [categoryId], references: [id])
   reportLogs Report_Log[]
+  entries    Report_Entry[]
 }
 
 model Category {
@@ -53,9 +56,21 @@ model Report {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  category   Category     @relation(fields: [categoryId], references: [id])
+  category   Category       @relation(fields: [categoryId], references: [id])
   reportLogs Report_Log[]
   votes      Vote[]
+  entries    Report_Entry[]
+}
+
+model Report_Entry {
+  id          String   @id @default(uuid())
+  reportId    String
+  userId      String
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+
+  report Report @relation(fields: [reportId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Report_Log {

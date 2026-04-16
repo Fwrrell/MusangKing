@@ -21,6 +21,18 @@ export const createReport = async (
     const latNum = parseFloat(latitude);
     const lonNum = parseFloat(longitude);
 
+    const user = await prisma.user.findUnique({
+      where: { device_id: reporter_device_id },
+    });
+
+    if (!user) {
+      res.status(401).json({
+        status: "error",
+        message: "Device ID not valid or not registered.",
+      });
+      return;
+    }
+
     const imageUrl = await upImageReport(file!); // upload ke storage supabase (link public)
     const aiResult = await analyzeReport(raw_description, imageUrl); // hasil validasi oleh Gemini AI
 
@@ -68,28 +80,30 @@ export const createReport = async (
 
     // kalo ada laporan terdekat (merge data nya)
     if (existingReport) {
-      const currDescription = existingReport.description
-        .split("\n")
-        .filter((d) => d.trim() !== "");
-      const nextNum = currDescription.length + 1;
-      const appendDesc = `${existingReport.description}\n${nextNum}. ${aiResult.filtered_description}`;
-
-      const updateReport = await prisma.report.update({
-        where: { id: existingReport.id },
-        data: {
-          image_url: { push: imageUrl },
-          description: appendDesc,
-        },
-      });
-
+      const [updateReport, newEntry] = await prisma.$transaction([
+        // push gambar ke array image_url
+        prisma.report.update({
+          where: { id: existingReport.id },
+          data: { image_url: { push: imageUrl } },
+        }),
+        // bikin thread pake user.id
+        prisma.report_Entry.create({
+          data: {
+            reportId: existingReport.id,
+            userId: user.id,
+            description: aiResult.filtered_description,
+          },
+        }),
+      ]);
       res.status(200).json({
         status: "success",
-        data: { report: updateReport },
+        data: { report: updateReport, new_thread: newEntry },
         message: "Report successfully merged with report nearby there.",
       });
+      return;
     }
 
-    // jika lolos maka simpan laporannya ke database
+    // jika tidak ada laporan terdekat bikin pin baru
     const uniqueSlug = `${aiResult.headline.toLowerCase().replace(/ /g, "-")}-${Date.now()}`;
 
     const newReport = await prisma.report.create({
@@ -106,6 +120,15 @@ export const createReport = async (
         estimated_cost: aiResult.estimated_cost,
         moderation_status: "approved", // ini status yang dihasilkan dari ai, artinya validasi report aja
         status: "pending", // ini status yang dihasilkan dari pemerintah/admin (verified/in_progres/resolved/rejected)
+        entries: {
+          create: {
+            userId: user.id,
+            description: aiResult.filtered_description,
+          },
+        },
+      },
+      include: {
+        entries: true,
       },
     });
 
@@ -133,6 +156,12 @@ export const getPublicReports = async (
       orderBy: { createdAt: "desc" },
       include: {
         category: true,
+        entries: {
+          include: {
+            user: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
       },
     });
 
