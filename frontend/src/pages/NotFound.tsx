@@ -37,7 +37,7 @@ const pageVariants: Variants = {
   },
 };
 
-export function LandingPage() {
+export function NotFound() {
   const navigate = useNavigate();
 
   return (
@@ -83,20 +83,6 @@ export function LandingPage() {
             />
           </div>
         </motion.div>
-
-        <div className="flex items-center gap-4">
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate("/app")}
-            className="hidden md:flex items-center gap-2 bg-white/50 backdrop-blur-md text-text-main px-8 py-3.5 rounded-full font-bold transition-all border-2 border-white shadow-sm"
-          >
-            User Pages
-            <ArrowRight className="w-4 h-4" />
-          </motion.button>
-        </div>
       </header>
 
       {/* Main Content */}
@@ -106,14 +92,20 @@ export function LandingPage() {
         animate="visible"
         className="relative z-10 flex flex-col items-center justify-start pt-12 md:pt-24 px-6 text-center"
       >
-        <motion.div variants={itemVariants} className="max-w-6xl">
-          <h2 className="text-white text-[90px] md:text-[180px] font-display mb-6 tracking-[-4px] leading-[0.85] drop-shadow-[4px_4px_0px_rgba(0,0,0,0.02)] uppercase font-daruma">
-            Coming
-            <br />
-            soon
+        <motion.div
+          variants={itemVariants}
+          className="max-w-6xl flex flex-col items-center"
+        >
+          <h2 className="text-white text-[120px] md:text-[160px] font-display mb-6 tracking-[-4px] leading-[0.85] drop-shadow-[4px_4px_0px_rgba(0,0,0,0.02)] uppercase font-daruma">
+            404
           </h2>
-        </motion.div>
-        <div className="pt-16 md:hidden relative z-50 px-6 pb-32 text-center -mt-10">
+          <motion.p
+            variants={itemVariants}
+            className="text-text-main/80 text-lg md:text-2xl font-light max-w-lg md:max-w-2xl mx-auto leading-relaxed mt-4 mb-8"
+          >
+            There's NOTHING here.
+          </motion.p>
+
           <motion.button
             variants={itemVariants}
             whileHover={{ scale: 1.05, y: -2 }}
@@ -121,10 +113,10 @@ export function LandingPage() {
             onClick={() => navigate("/app")}
             className="flex items-center gap-3 bg-white/10 backdrop-blur-md text-white px-8 py-4 rounded-full font-bold transition-colors border border-white/30 hover:bg-white hover:text-zinc-900 shadow-xl"
           >
-            User Pages
+            Kembali ke Dashboard
             <ArrowRight className="w-5 h-5" />
           </motion.button>
-        </div>
+        </motion.div>
       </motion.main>
 
       {/* Clouds Container */}
