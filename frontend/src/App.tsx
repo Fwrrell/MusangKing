@@ -1,8 +1,9 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import UserLayouts from "@/layouts/UserLayouts";
+import MapDashboard from "./pages/MapDashboard";
+import { LandingPage } from "./pages/LandingPage";
 
 // Dummy Pages (Nanti pindahkan ke file terpisah di folder /pages)
-const Dashboard = () => <h2 className="text-2xl font-semibold">Overview</h2>;
 const Inventory = () => (
   <h2 className="text-2xl font-semibold">Inventory Management</h2>
 );
@@ -13,11 +14,15 @@ const Settings = () => (
 const router = createBrowserRouter([
   {
     path: "/",
+    element: <LandingPage />,
+  },
+  {
+    path: "/app",
     element: <UserLayouts />,
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: <MapDashboard />,
       },
       {
         path: "inventory",

@@ -9,14 +9,17 @@ export default function UserLayouts() {
       <AppSidebar />
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full bg-background text-foreground h-screen overflow-auto">
+      <main className="flex-1 w-full bg-background text-zinc-100 h-screen flex flex-col overflow-hidden">
         {/* Header untuk tombol trigger (opsional, ditaruh di atas konten) */}
-        <div className="p-4 flex items-center border-b border-border">
-          <SidebarTrigger className="text-muted-foreground hover:text-primary transition-colors" />
-        </div>
+        <header className="p-4 flex items-center border-b backdrop-blur-md z-10 shadow-xl">
+          <SidebarTrigger className="text-zinc-400 hover:text-indigo-400" />
+          <h2 className="ml-4 font-medium text-sm text-zinc-400">
+            Peta Laporan Kota Bandung
+          </h2>
+        </header>
 
         {/* Tempat halaman dirender */}
-        <div className="p-8">
+        <div className="flex-1 relative">
           <Outlet />
         </div>
       </main>
