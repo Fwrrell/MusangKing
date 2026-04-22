@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
+import { randomUUID } from "crypto";
 
 const JWT_SECRET = process.env.JWT_SECRET as string;
 
@@ -13,15 +14,19 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const user = await prisma.user.findUnique({
       where: { email },
     });
-    if (!user) {
-      res.status(401).json({ status: "Error", message: "Email not found." });
+    if (!user || !user.password) {
+      res
+        .status(401)
+        .json({ status: "Error", message: "Email or Password is wrong." });
       return;
     }
 
     // cek password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      res.status(401).json({ status: "Error", message: "Wrong Password." });
+      res
+        .status(401)
+        .json({ status: "Error", message: "Email or Password is wrong." });
       return;
     }
 
@@ -66,8 +71,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const hashedPassword = await bcrypt.hash(password, 16);
 
+    const adminDeviceId = `musang-${randomUUID()}`;
+
     const newUser = await prisma.user.create({
       data: {
+        device_id: adminDeviceId,
         name,
         email,
         password: hashedPassword,
@@ -86,5 +94,3 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ message: "Internal server error.", err });
   }
 };
-
-module.exports = { login, register };

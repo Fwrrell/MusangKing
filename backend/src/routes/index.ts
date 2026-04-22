@@ -3,10 +3,12 @@ import { authRouter, adminAuthRouter } from "./authRoutes";
 import { categoryRouter, adminCategoryRouter } from "./categoryRoutes";
 import { reportRouter, adminReportRouter } from "./reportRoutes";
 import { isAdmin, verifyToken } from "../middlewares/authMiddleware";
+import { userRouter } from "./userRoutes";
 
 const apiRouter = Router();
 
 // public routes
+apiRouter.use("/users", userRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/categories", categoryRouter);
 apiRouter.use("/reports", reportRouter);
