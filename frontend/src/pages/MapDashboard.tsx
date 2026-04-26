@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { type LatLngBoundsExpression, type LatLngTuple } from "leaflet";
 import bandungGeoJSON from "@/data/3273-kota-bandung-level-kecamatan.json";
+import { Plus } from "lucide-react";
+
+import AddReportModal from "@/components/AddReportModal";
 
 // koordinat tengah Kota Bandung
 const position: LatLngTuple = [-6.9147, 107.6098];
@@ -13,6 +17,8 @@ const bandungBounds: LatLngBoundsExpression = [
 ];
 
 export default function MapDashboard() {
+  const [isReportOpen, setIsReportOpen] = useState(false);
+
   const styleKecamatan = (feature: any) => {
     const kecamatanName = feature?.properties?.WADMKC;
     const fillColor =
@@ -82,11 +88,19 @@ export default function MapDashboard() {
         />
       </MapContainer>
 
-      <div className="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
-        <button className="bg-zinc-900 border border-zinc-800 text-white px-4 py-2 rounded-lg shadow-xl hover:bg-zinc-800 transition-all text-sm font-medium">
-          + Buat Laporan
+      <div className="absolute bottom-8 right-6 gap-2 z-[1000]">
+        <button
+          onClick={() => setIsReportOpen(true)}
+          className="w-16 h-16 flex items-center justify-center bg-zinc-900 border border-zinc-800 text-white rounded-full shadow-xl hover:bg-zinc-800 transition-all text-2xl cursor-pointer"
+        >
+          <Plus className="w-8 h-8" />
         </button>
       </div>
+
+      <AddReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+      />
     </div>
   );
 }
