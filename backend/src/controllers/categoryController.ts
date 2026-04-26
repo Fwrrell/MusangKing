@@ -32,11 +32,9 @@ export const getAllCategories = async (
       orderBy: { name: "asc" },
     });
 
-    res.status(201).json({
+    res.status(200).json({
       status: "success",
-      data: {
-        categories,
-      },
+      data: categories,
       message: "Category successfully displayed.",
     });
   } catch (err) {

@@ -7,6 +7,11 @@ import {
   Loader2,
   LocateFixed,
   Info,
+  ArrowLeft,
+  MoreVertical,
+  ChevronDown,
+  ArrowRight,
+  FileText,
 } from "lucide-react";
 import { MapContainer, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -38,9 +43,9 @@ export default function AddReportModal({
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [step, setStep] = useState(1);
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
-    [],
-  );
+  const [categories, setCategories] = useState<
+    { id: string; name: string; color: string }[]
+  >([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   // state lokasi
@@ -103,12 +108,25 @@ export default function AddReportModal({
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => getUserLocation(), 500);
-      //TODO: fetch ke database table categories (DUMMY ONLY)
-      setCategories([
-        { id: "cat-1", name: "Jalan Berlubang" },
-        { id: "cat-2", name: "Lampu Mati" },
-        { id: "cat-3", name: "Fasilitas Rusak" },
-      ]);
+      if (categories.length === 0) {
+        const fetchCategories = async () => {
+          try {
+            const response = await fetch(
+              "http://localhost:3000/api/categories",
+            );
+            const result = await response.json();
+
+            if (response.ok) {
+              setCategories(result.data);
+            } else {
+              console.error("Gagal mengambil categories: ", result.message);
+            }
+          } catch (err) {
+            console.error("Error fetching categories: ", err);
+          }
+        };
+        fetchCategories();
+      }
     } else {
       setStep(1);
       setImageFile(null);
@@ -117,7 +135,7 @@ export default function AddReportModal({
       setSearchQuery("");
       setSearchResults([]);
     }
-  }, [isOpen]);
+  }, [isOpen, categories.length]);
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -182,51 +200,105 @@ export default function AddReportModal({
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedCategory || !imageFile || !description) {
       alert("Harap lengkapi kategori, foto, dan deskripsi.");
       return;
     }
 
-    setIsSubmitting(true);
-    try {
-      const deviceId = localStorage.getItem("device_id");
-      const formData = new FormData();
-      formData.append("categoryId", selectedCategory);
-      formData.append("raw_description", description);
-      formData.append("latitude", position.lat.toString());
-      formData.append("longitude", position.lng.toString());
-      if (deviceId) formData.append("reporter_device_id", deviceId);
-      formData.append("image", imageFile);
+    const deviceId = localStorage.getItem("device_id");
+    const formData = new FormData();
+    formData.append("categoryId", selectedCategory);
+    formData.append("raw_description", description);
+    formData.append("latitude", position.lat.toString());
+    formData.append("longitude", position.lng.toString());
+    if (deviceId) formData.append("reporter_device_id", deviceId);
+    formData.append("image", imageFile);
 
-      const response = await fetch("http://localhost:3000/api/reports", {
-        method: "POST",
-        body: formData,
+    fetch("http://localhost:3000/api/reports", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        console.log(
+          "Laporan berhasil masuk antrean backend: ",
+          result,
+          // TODO: next bisa panggil global state
+        );
+      })
+      .catch((error) => {
+        console.error("Gagal mengirim laporan: ", error);
       });
 
-      const result = await response.json();
-      if (response.ok) {
-        alert("Laporan kamu berhasil dikirim!");
-        onClose();
-        // TODO: Refresh map laporan utama di sini
-      } else {
-        alert(`Gagal: ${result.message}`);
-      }
-    } catch (error) {
-      console.error("Submit error:", error);
-      alert("Terjadi kesalahan server.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    alert(
+      "Laporan kamu berhasil dikirim, lihat progresnya di LaporanKu. Terima Kasih atas Laporannya. ",
+    );
   };
 
   if (!isOpen) return null;
 
+  const stepItems = ["Detail Lokasi", "Foto & Deskripsi", "Kirim Laporan"];
+
   return (
-    <div className="fixed inset-0 supports-backdrop-filter:backdrop-blur-xs bg-black/30 flex items-center justify-center z-[9999]">
-      <div className="w-[900px] h-[600px] bg-white rounded-2xl shadow-2xl flex overflow-hidden">
+    <div className="fixed inset-0 bg-white md:supports-backdrop-filter:backdrop-blur-xs md:bg-black/30 flex items-center justify-center z-[9999]">
+      <div className="w-full h-full md:w-[900px] md:h-[600px] bg-[#f7fafc] md:bg-white md:rounded-2xl md:shadow-2xl flex flex-col md:flex-row overflow-hidden">
+        {/* MOBILE HEADER */}
+        <div className="md:hidden bg-[#f7fafc] px-5 pt-9 pb-5 shadow-sm">
+          <div className="flex items-center justify-between px-2">
+            <h1 className="text-[28px] font-extrabold text-[#415963] tracking-tight">
+              Submit Report
+            </h1>
+            <button
+              onClick={onClose}
+              className=" -mr-2 text-[#415963] bg-zinc-100 hover:bg-zinc-200 p-2 rounded-full transition-colors"
+            >
+              <X size={28} />
+            </button>
+          </div>
+        </div>
+
+        {/* MOBILE STEPPER */}
+        <div className="md:hidden bg-[#f7fafc] px-10 pt-8 pb-7">
+          <div className="relative grid grid-cols-3 items-start text-center">
+            <div className="absolute left-0 right-0 top-6 h-[3px] bg-slate-200" />
+            <div
+              className="absolute left-0 top-6 h-[3px] bg-[#a9c7d2] transition-all"
+              style={{ width: `${((step - 1) / 2) * 100}%` }}
+            />
+            {stepItems.map((label, index) => {
+              const stepNumber = index + 1;
+              const active = step === stepNumber;
+              const completed = step > stepNumber;
+              return (
+                <div
+                  key={label}
+                  className="relative z-10 flex flex-col items-center gap-3"
+                >
+                  <div
+                    className={`flex h-12 w-12 items-center justify-center rounded-full text-xl font-extrabold shadow-sm ${
+                      active || completed
+                        ? "bg-[#455f68] text-white"
+                        : "bg-slate-200 text-[#2e3d42]"
+                    }`}
+                  >
+                    {stepNumber}
+                  </div>
+                  <p
+                    className={`text-base font-semibold leading-tight ${
+                      active ? "text-[#415963]" : "text-slate-500"
+                    }`}
+                  >
+                    {label}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {/* LEFT SIDE (Stepper) */}
-        <div className="w-1/3 bg-zinc-50 p-6 flex flex-col justify-between">
+        <div className="hidden md:flex w-1/3 bg-zinc-50 p-6 flex-col justify-between">
           <div>
             <h2 className="text-lg font-semibold mb-2 text-black">
               Lapor Kerusakan
@@ -283,22 +355,22 @@ export default function AddReportModal({
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="w-2/3 p-8 relative flex flex-col h-full">
+        <div className="w-full md:w-2/3 px-6 md:p-8 relative flex flex-col h-full min-h-0 bg-[#f7fafc] md:bg-white">
           <button
             onClick={onClose}
-            className="absolute top-6 right-6 bg-zinc-100 hover:bg-zinc-200 p-2 rounded-full transition-colors z-[10000]"
+            className="hidden md:block absolute top-6 right-6 bg-zinc-100 hover:bg-zinc-200 p-2 rounded-full transition-colors z-[10000]"
           >
             <X size={18} className="text-black" />
           </button>
-          <div className="flex-1 overflow-y-auto pr-2 pb-16">
+          <div className="flex-1 overflow-y-auto md:pr-2 pb-28 md:pb-16 min-h-0">
             {/* STEP 1: DETAIL LOKASI */}
             {step === 1 && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                <h2 className="text-xl font-bold mb-4 text-black">
+                <h2 className="hidden md:block text-xl font-bold mb-4 text-black">
                   Tandai Titik Kerusakan
                 </h2>
 
-                <div className="w-full h-[220px] bg-zinc-100 rounded-xl mb-5 overflow-hidden border border-zinc-200 relative z-0">
+                <div className="w-full h-[330px] md:h-[220px] bg-zinc-100 rounded-[34px] md:rounded-xl mb-5 overflow-hidden border border-zinc-200 relative z-0 shadow-sm">
                   <MapContainer
                     center={position}
                     zoom={16}
@@ -325,9 +397,19 @@ export default function AddReportModal({
                   </div>
                 </div>
 
+                <div className="md:hidden mb-7 flex items-start gap-3 px-4 text-slate-500">
+                  <Info
+                    size={18}
+                    className="mt-1 shrink-0 fill-slate-500 text-white"
+                  />
+                  <p className="text-lg leading-snug">
+                    Geser peta untuk menentukan titik kerusakan yang akurat.
+                  </p>
+                </div>
+
                 {/* Search Box + GPS Button */}
                 <div className="mb-6">
-                  <label className="flex items-center gap-2 text-sm font-semibold text-zinc-800">
+                  <label className="hidden md:flex items-center gap-2 text-sm font-semibold text-zinc-800">
                     <span>Cari Alamat Spesifik</span>
                     <div className="flex items-center gap-1">
                       <span className="text-zinc-400 font-normal text-xs italic">
@@ -343,14 +425,14 @@ export default function AddReportModal({
                   </label>
 
                   <div className="flex items-center gap-3 mt-2 relative">
-                    <div className="relative flex-1 flex items-center gap-2 border border-zinc-300 rounded-xl px-3 py-2.5 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                    <div className="relative flex-1 flex items-center gap-4 border border-zinc-200 rounded-2xl md:rounded-xl px-5 md:px-3 py-5 md:py-2.5 bg-white focus-within:border-[#7fa7b4] focus-within:ring-2 focus-within:ring-[#d7e8ef] transition-all shadow-md md:shadow-none">
                       <Search size={18} className="text-zinc-800" />
                       <input
                         type="text"
-                        placeholder="-6.9147, 107.6098 atau Nama Jalan..."
+                        placeholder="Cari Alamat Spesifik"
                         value={searchQuery}
                         onChange={handleSearchInput}
-                        className="w-full outline-none text-sm bg-transparent text-black"
+                        className="w-full outline-none text-xl md:text-sm bg-transparent text-black placeholder:text-slate-300"
                       />
                       {isSearching && (
                         <Loader2
@@ -383,19 +465,53 @@ export default function AddReportModal({
                     <button
                       onClick={getUserLocation}
                       title="Gunakan lokasi saya saat ini"
-                      className="p-3 border border-zinc-300 rounded-xl bg-white hover:bg-zinc-50 hover:border-zinc-400 hover:text-blue-600 transition-all text-zinc-500 shadow-sm"
+                      className="hidden md:block p-3 border border-zinc-300 rounded-xl bg-white hover:bg-zinc-50 hover:border-zinc-400 hover:text-blue-600 transition-all text-zinc-500 shadow-sm"
                     >
                       <LocateFixed size={20} />
                     </button>
                   </div>
                 </div>
 
+                <div className="md:hidden mb-9 rounded-2xl border border-[#c8def7] bg-[#eef6ff] p-5 text-[#415963]">
+                  <div className="mb-4 flex items-center gap-3 text-sm font-extrabold uppercase tracking-[0.16em]">
+                    <LocateFixed size={20} />
+                    Lokasi Terdeteksi
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#455f68] text-white">
+                      <MapPin size={18} />
+                    </div>
+                    <p className="text-xl font-semibold leading-snug text-slate-600 line-clamp-2">
+                      {address}
+                    </p>
+                  </div>
+                </div>
+
                 {/* Kategori */}
                 <div>
-                  <p className="text-sm font-semibold text-zinc-800 mb-3">
+                  <p className="text-2xl md:text-sm font-extrabold md:font-semibold uppercase md:normal-case text-[#415963] md:text-zinc-800 mb-5 md:mb-3 tracking-tight">
                     Kategori Infrastruktur
                   </p>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="md:hidden mb-4 h-[3px] w-20 bg-[#a9c7d2] rounded-full -mt-3" />
+                  <div className="md:hidden relative mb-4">
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="w-full appearance-none rounded-2xl border border-zinc-200 bg-white px-6 py-5 pr-12 text-xl font-bold text-zinc-800 shadow-md outline-none focus:border-[#7fa7b4] focus:ring-2 focus:ring-[#d7e8ef]"
+                    >
+                      <option value="">Pilih Kategori Infrastruktur</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-[#415963]"
+                      size={28}
+                    />
+                  </div>
+                  <div className="hidden md:flex gap-2 flex-wrap">
                     {categories.map((cat) => (
                       <button
                         key={cat.id}
@@ -462,8 +578,8 @@ export default function AddReportModal({
                     rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Ceritakan detail kerusakan yang kamu lihat. Semakin jelas, semakin cepat diproses..."
-                    className="w-full px-4 py-3 border border-zinc-300 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none transition-all"
+                    placeholder="Ceritakan detail kerusakan yang kamu lihat. Semakin jelas, semakin cepat membantu pihak setempat."
+                    className="w-full px-4 py-3 border border-zinc-300 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-none transition-all text-black"
                   />
                 </div>
               </div>
@@ -503,17 +619,26 @@ export default function AddReportModal({
                         {imageFile ? "Telah dilampirkan" : "Tidak ada"}
                       </span>
                     </div>
+                    <div className="rounded-2xl border border-blue-200 bg-white/80 p-4">
+                      <div className="mb-3 flex items-center gap-2 text-blue-600 font-semibold">
+                        <FileText size={18} />
+                        <span>Deskripsi Kerusakan</span>
+                      </div>
+                      <p className="max-h-36 overflow-y-auto whitespace-pre-wrap break-words rounded-xl bg-blue-50/70 p-3 text-sm leading-relaxed font-medium text-blue-950">
+                        {description.trim() || "Belum ada deskripsi."}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
           </div>
           {/* FOOTER */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 pt-4 border-t border-zinc-100 flex justify-between items-center bg-white z-[100] rounded-br-2xl">
+          <div className="absolute bottom-0 left-0 right-0 px-8 md:p-6 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:pt-4 border-t border-zinc-100 flex justify-between items-center bg-[#f7fafc] md:bg-white z-[100] md:rounded-br-2xl shadow-[0_-16px_40px_rgba(15,23,42,0.04)] md:shadow-none">
             {step > 1 ? (
               <button
                 onClick={() => setStep(step - 1)}
-                className="text-sm font-semibold text-zinc-500 hover:text-zinc-800 transition-colors"
+                className="text-lg md:text-sm font-bold md:font-semibold text-zinc-500 hover:text-zinc-800 transition-colors"
               >
                 ← Kembali
               </button>
@@ -528,15 +653,20 @@ export default function AddReportModal({
                   step === 1 &&
                   (!selectedCategory || address === "Menunggu lokasi...")
                 }
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-200 hover:bg-blue-700 disabled:opacity-50 transition-all"
+                className="bg-[#8fb0bc] md:bg-blue-600 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl shadow-slate-300 md:shadow-blue-200 hover:bg-[#7fa7b4] md:hover:bg-blue-700 disabled:opacity-50 transition-all"
               >
-                Lanjut ke Tahap {step + 1}
+                <span className="hidden md:inline">
+                  Lanjut ke Tahap {step + 1}
+                </span>
+                <span className="md:hidden flex items-center gap-3">
+                  Lanjut <ArrowRight size={28} />
+                </span>
               </button>
             ) : (
               <button
                 onClick={handleSubmit}
                 disabled={isSubmiting}
-                className="bg-zinc-900 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md hover:bg-zinc-800 disabled:opacity-70 flex items-center gap-2 transition-all"
+                className="bg-zinc-900 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl md:shadow-md hover:bg-zinc-800 disabled:opacity-70 flex items-center gap-2 transition-all"
               >
                 {isSubmiting ? (
                   <Loader2 size={16} className="animate-spin" />
