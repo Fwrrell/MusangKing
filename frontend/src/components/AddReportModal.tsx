@@ -7,14 +7,17 @@ import {
   Loader2,
   LocateFixed,
   Info,
-  ArrowLeft,
-  MoreVertical,
   ChevronDown,
   ArrowRight,
   FileText,
+  AlertCircle,
 } from "lucide-react";
 import { MapContainer, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+
+import booleanPointInPolygon from "@turf/boolean-point-in-polygon";
+import { point } from "@turf/helpers";
+import bandungGeoJSON from "@/data/3273-kota-bandung-level-kecamatan.json";
 
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
@@ -52,6 +55,8 @@ export default function AddReportModal({
   const [position, setPosition] = useState(DEFAULT_CENTER);
   const [address, setAddress] = useState("Menunggu lokasi...");
 
+  const [isValidLocation, setIsValidLocation] = useState(true);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -86,6 +91,8 @@ export default function AddReportModal({
         const map = e.target;
         const center = map.getCenter();
         setPosition({ lat: center.lat, lng: center.lng });
+
+        setIsValidLocation(validateLocation(center.lat, center.lng));
         fetchAddressFromCoords(center.lat, center.lng);
       },
     });
@@ -99,6 +106,8 @@ export default function AddReportModal({
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setPosition(coords);
         mapRef.current?.flyTo(coords, 16);
+
+        setIsValidLocation(validateLocation(coords.lat, coords.lng));
         fetchAddressFromCoords(coords.lat, coords.lng);
       },
       () => setAddress("Akses lokasi ditolak, gunakan peta untuk mencari."),
@@ -157,6 +166,7 @@ export default function AddReportModal({
         };
         setPosition(coords);
         mapRef.current?.flyTo(coords, 16);
+        setIsValidLocation(validateLocation(coords.lat, coords.lng));
         fetchAddressFromCoords(coords.lat, coords.lng);
         setSearchResults([]);
         setIsSearching(false);
@@ -186,6 +196,8 @@ export default function AddReportModal({
   const handleSearchResult = (result: any) => {
     const coords = { lat: parseFloat(result.lat), lng: parseFloat(result.lon) };
     setPosition(coords);
+
+    setIsValidLocation(validateLocation(coords.lat, coords.lng));
     setAddress(result.display_name);
     mapRef.current?.flyTo(coords, 16);
     setSearchResults([]);
@@ -234,11 +246,26 @@ export default function AddReportModal({
     alert(
       "Laporan kamu berhasil dikirim, lihat progresnya di LaporanKu. Terima Kasih atas Laporannya. ",
     );
+    onClose();
   };
 
   if (!isOpen) return null;
 
   const stepItems = ["Detail Lokasi", "Foto & Deskripsi", "Kirim Laporan"];
+
+  // pastiin tkp di bandung
+  const validateLocation = (lat: number, lng: number) => {
+    const pt = point([lng, lat]);
+    let isInside = false;
+
+    for (const feature of (bandungGeoJSON as any).features) {
+      if (booleanPointInPolygon(pt, feature)) {
+        isInside = true;
+        break; // kalo ternyata didalem kecamatan, stop
+      }
+    }
+    return isInside;
+  };
 
   return (
     <div className="fixed inset-0 bg-white md:supports-backdrop-filter:backdrop-blur-xs md:bg-black/30 flex items-center justify-center z-[9999]">
@@ -343,15 +370,29 @@ export default function AddReportModal({
               )}
             </div>
           </div>
-
           {/* Detected location */}
-          <div className="bg-white border rounded-xl p-3 text-sm shadow-sm">
-            <div className="flex items-center gap-2 text-zinc-500 mb-1">
+          <div
+            className={`border rounded-xl p-3 text-sm shadow-sm transition-colors ${isValidLocation ? "bg-white border-zinc-200" : "bg-red-50 border-red-300"}`}
+          >
+            <div
+              className={`flex items-center gap-2 mb-1 ${isValidLocation ? "text-zinc-500" : "text-red-500 font-bold"}`}
+            >
               <MapPin size={16} />
               <span>Lokasi Terdeteksi</span>
             </div>
-            <p className="text-zinc-700">{address}</p>
-          </div>
+            <p
+              className={`${isValidLocation ? "text-zinc-700" : "text-red-700"}`}
+            >
+              {address}
+            </p>
+
+            {!isValidLocation && (
+              <div className="mt-2 text-xs font-bold text-red-600 flex items-start gap-1">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <p>Area ini berada di luar cakupan wilayah Kota Bandung.</p>
+              </div>
+            )}
+          </div>{" "}
         </div>
 
         {/* RIGHT SIDE */}
@@ -651,9 +692,11 @@ export default function AddReportModal({
                 onClick={() => setStep(step + 1)}
                 disabled={
                   step === 1 &&
-                  (!selectedCategory || address === "Menunggu lokasi...")
+                  (!selectedCategory ||
+                    address === "Menunggu lokasi..." ||
+                    !isValidLocation)
                 }
-                className="bg-[#8fb0bc] md:bg-blue-600 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl shadow-slate-300 md:shadow-blue-200 hover:bg-[#7fa7b4] md:hover:bg-blue-700 disabled:opacity-50 transition-all"
+                className="bg-[#8fb0bc] md:bg-blue-600 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl shadow-slate-300 md:shadow-blue-200 hover:bg-[#7fa7b4] md:hover:bg-blue-700 disabled:opacity-50 disabled:grayscale transition-all"
               >
                 <span className="hidden md:inline">
                   Lanjut ke Tahap {step + 1}

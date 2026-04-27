@@ -167,7 +167,7 @@ export const getPublicReports = async (
 
     res.status(200).json({
       status: "success",
-      data: { reports },
+      data: reports,
       message: "Reports successfully displayed.",
     });
   } catch (err) {
@@ -243,6 +243,37 @@ export const updateAdminReport = async (
       data: { report: updatedReport },
       message: "Report updated.",
     });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+export const getReportBySlug = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { slug } = req.params as { slug: string };
+    const report = await prisma.report.findUnique({
+      where: { slug },
+      include: {
+        category: true,
+        votes: true,
+        entries: {
+          include: { user: true },
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    if (!report) {
+      res.status(404).json({ status: "error", message: "Report not found." });
+      return;
+    }
+
+    res
+      .status(200)
+      .json({ status: "success", data: report, message: "Report found." });
   } catch (err) {
     res.status(500).json({ error: "Internal server error." });
   }

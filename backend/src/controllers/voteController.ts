@@ -16,7 +16,7 @@ export const toggleVote = async (
       return;
     }
 
-    const report = await prisma.user.findUnique({ where: { id } });
+    const report = await prisma.report.findUnique({ where: { id } });
     if (!report) {
       res.status(404).json({ status: "error", message: "Report not found." });
       return;
@@ -39,7 +39,7 @@ export const toggleVote = async (
         message: "Vote removed.",
       });
     } else {
-      await prisma.vote.create({
+      const newVote = await prisma.vote.create({
         data: {
           reportId: id,
           device_id: device_id,
@@ -47,7 +47,7 @@ export const toggleVote = async (
       });
       res.status(200).json({
         status: "success",
-        data: existingVote,
+        data: newVote,
         message: "Vote added.",
       });
     }

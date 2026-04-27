@@ -3,6 +3,7 @@ import UserLayouts from "@/layouts/UserLayouts";
 import MapDashboard from "./pages/MapDashboard";
 import { LandingPage } from "./pages/LandingPage";
 import { NotFound } from "./pages/NotFound";
+import ThreadPage from "./pages/ThreadPage";
 
 // Dummy Pages (Nanti pindahkan ke file terpisah di folder /pages)
 const Notification = () => (
@@ -35,6 +36,11 @@ const router = createBrowserRouter([
         element: <Settings />,
       },
     ],
+  },
+  {
+    path: "/report/:slug",
+    element: <ThreadPage />,
+    errorElement: <NotFound />,
   },
 ]);
 

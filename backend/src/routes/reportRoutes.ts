@@ -3,6 +3,7 @@ import {
   createReport,
   getAdminReports,
   getPublicReports,
+  getReportBySlug,
   updateAdminReport,
   updateReportStatus,
 } from "../controllers/reportController";
@@ -12,6 +13,7 @@ import { verifyToken } from "../middlewares/authMiddleware";
 
 export const reportRouter = Router();
 reportRouter.get("/", getPublicReports);
+reportRouter.get("/:slug", getReportBySlug);
 reportRouter.post("/", upload.single("image"), createReport);
 reportRouter.post("/:id/vote", toggleVote);
 reportRouter.patch("/:id", verifyToken, updateReportStatus); // khusus admin/pemerintah
