@@ -194,7 +194,7 @@ export default function MapDashboard() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/reports?moderation_status=approved",
+        `${import.meta.env.VITE_API_URL}/api/reports?moderation_status=approved`,
       );
       const result = await response.json();
 
@@ -322,7 +322,7 @@ export default function MapDashboard() {
   };
 
   return (
-    <section className="relative h-[100dvh] min-h-[520px] w-full overflow-hidden bg-slate-100">
+    <section className="relative h-full min-h-[520px] w-full overflow-hidden bg-slate-100">
       <MapContainer
         center={BANDUNG_CENTER}
         zoom={13}
@@ -353,7 +353,7 @@ export default function MapDashboard() {
         })}
       </MapContainer>
 
-      <div className="absolute bottom-0 left-0 right-0 z-[900] bg-gradient-to-t from-white via-white/90 to-transparent px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-12 sm:left-auto sm:right-6 sm:w-auto sm:bg-none sm:p-0 sm:bottom-6">
+      <div className="absolute bottom-[calc(76px+env(safe-area-inset-bottom)+1rem)] left-0 right-0 z-40 px-4 pt-12 sm:left-auto sm:right-6 sm:bottom-6 sm:z-[900] sm:w-auto sm:bg-none sm:p-0">
         <div className="mx-auto flex max-w-6xl items-end justify-between gap-3 sm:block">
           <div className="min-w-0 sm:hidden">
             {isLoading ? (
@@ -367,11 +367,7 @@ export default function MapDashboard() {
               >
                 <RefreshCw className="h-4 w-4" /> Refresh
               </button>
-            ) : (
-              <p className="text-sm font-bold text-slate-700">
-                {validReports.length} laporan valid
-              </p>
-            )}
+            ) : null}
           </div>
 
           <button

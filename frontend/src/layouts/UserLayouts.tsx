@@ -1,27 +1,31 @@
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar, MobileDockNav } from "@/components/app-sidebar";
 
 export default function UserLayouts() {
   return (
-    // SidebarProvider mengatur state global (buka/tutup) sidebar
     <SidebarProvider>
       <AppSidebar />
 
-      {/* Main Content Area */}
-      <main className="flex-1 w-full bg-background text-zinc-100 h-screen flex flex-col overflow-hidden">
-        {/* Header untuk tombol trigger (opsional, ditaruh di atas konten) */}
-        <header className="p-4 flex items-center border-b backdrop-blur-md z-10 shadow-xl">
-          <SidebarTrigger className="text-zinc-400 hover:text-indigo-400" />
-          <h2 className="ml-4 font-medium text-sm text-zinc-400">
-            Peta Laporan Kota Bandung
-          </h2>
+      <main className="flex h-screen w-full flex-1 flex-col overflow-hidden bg-[#fbfef9] text-[#23395b]">
+        <header className="z-10 hidden items-center border-b border-[#276fbf]/10 bg-[#fbfef9]/80 px-5 py-4 shadow-sm backdrop-blur-xl md:flex">
+          <SidebarTrigger className="text-[#23395b]/60 hover:bg-[#276fbf]/10 hover:text-[#276fbf]" />
+
+          <div className="ml-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#276fbf]">
+              Lentera
+            </p>
+            <h2 className="text-sm font-bold text-[#23395b]">
+              Peta Laporan Kota Bandung
+            </h2>
+          </div>
         </header>
 
-        {/* Tempat halaman dirender */}
-        <div className="flex-1 relative">
+        <div className="relative flex-1 overflow-hidden pb-24 md:pb-0">
           <Outlet />
         </div>
+
+        <MobileDockNav />
       </main>
     </SidebarProvider>
   );
