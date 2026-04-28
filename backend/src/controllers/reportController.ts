@@ -74,7 +74,7 @@ export const createReport = async (
 
     // dengan jarak max 250m
     const existingReport = cekReports.find(
-      (report) =>
+      (report: any) =>
         getDistance(latNum, lonNum, report.latitude, report.longitude) <= 250,
     );
 
