@@ -121,7 +121,7 @@ export default function AddReportModal({
         const fetchCategories = async () => {
           try {
             const response = await fetch(
-              "http://localhost:3000/api/categories",
+              `${import.meta.env.VITE_API_URL}/api/categories`,
             );
             const result = await response.json();
 
@@ -227,7 +227,7 @@ export default function AddReportModal({
     if (deviceId) formData.append("reporter_device_id", deviceId);
     formData.append("image", imageFile);
 
-    fetch("http://localhost:3000/api/reports", {
+    fetch(`${import.meta.env.VITE_API_URL}/api/reports`, {
       method: "POST",
       body: formData,
     })

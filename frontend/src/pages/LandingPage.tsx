@@ -70,7 +70,7 @@ export function LandingPage() {
     try {
       const newDeviceId = uuidv4();
 
-      const response = await fetch("http://localhost:3000/api/users/init", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/init`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

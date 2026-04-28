@@ -64,7 +64,7 @@ export default function ThreadPage() {
     const fetchDetail = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/api/reports/${slug}`,
+          `${import.meta.env.VITE_API_URL}/api/reports/${slug}`,
         );
         const result = await response.json();
 
@@ -433,7 +433,7 @@ export default function ThreadPage() {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/reports/${reportData.id}/vote`,
+        `${import.meta.env.VITE_API_URL}/api/reports/${reportData.id}/vote`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
