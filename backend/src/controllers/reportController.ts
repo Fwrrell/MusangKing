@@ -346,3 +346,60 @@ export const updateReportStatus = async (
     res.status(500).json({ error: "Internal server error." });
   }
 };
+
+export const getReportStats = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const totalReports = await prisma.report.count();
+
+    const verifiedReports = await prisma.report.count({
+      where: { moderation_status: "approved" },
+    });
+
+    const resolvedReports = await prisma.report.count({
+      where: { status: "resolved" },
+    });
+
+    const inProgressReports = await prisma.report.count({
+      where: { status: "in_progress" },
+    });
+
+    const topCategoryGroup = await prisma.report.groupBy({
+      by: ["categoryId"],
+      _count: { categoryId: true },
+      orderBy: { _count: { categoryId: "desc" } },
+      take: 1,
+    });
+
+    let topCategoryName = "-";
+    if (topCategoryGroup.length > 0) {
+      const category = await prisma.category.findUnique({
+        where: { id: topCategoryGroup[0].categoryId },
+      });
+      if (category) topCategoryName = category.name;
+    }
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const reportsToday = await prisma.report.count({
+      where: { createdAt: { gte: yesterday } },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        totalReports,
+        verifiedReports,
+        resolvedReports,
+        inProgressReports,
+        reportsToday,
+        topCategoryName,
+      },
+      message: "Report Status successfully obtained.",
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Internal server error." });
+  }
+};

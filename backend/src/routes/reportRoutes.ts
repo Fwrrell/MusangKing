@@ -4,6 +4,7 @@ import {
   getAdminReports,
   getPublicReports,
   getReportBySlug,
+  getReportStats,
   updateAdminReport,
   updateReportStatus,
 } from "../controllers/reportController";
@@ -16,6 +17,7 @@ reportRouter.get("/", getPublicReports);
 reportRouter.get("/:slug", getReportBySlug);
 reportRouter.post("/", upload.single("image"), createReport);
 reportRouter.post("/:id/vote", toggleVote);
+reportRouter.get("/stats", getReportStats);
 reportRouter.patch("/:id", verifyToken, updateReportStatus); // khusus admin/pemerintah
 
 export const adminReportRouter = Router();
