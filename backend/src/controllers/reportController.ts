@@ -3,6 +3,7 @@ import prisma from "../lib/prisma";
 import { getDistance } from "../utils/geoutils";
 import { upImageReport } from "../services/storageService";
 import { analyzeReport } from "../services/geminiService";
+import { resourceLimits } from "node:worker_threads";
 
 export const createReport = async (
   req: Request,
@@ -140,6 +141,38 @@ export const createReport = async (
   } catch (err) {
     // TODO: DELETE DEBUG
     console.log(err);
+    res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+export const getMyReports = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { deviceId } = req.query;
+
+    if (!deviceId) {
+      res
+        .status(400)
+        .json({ status: "error", message: "Device ID is required." });
+      return;
+    }
+
+    const reports = await prisma.report.findMany({
+      where: { reporter_device_id: String(deviceId) },
+      include: {
+        category: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    res.status(200).json({
+      status: "success",
+      data: reports,
+      message: "Reports successfully displayed.",
+    });
+  } catch (err) {
     res.status(500).json({ error: "Internal server error." });
   }
 };

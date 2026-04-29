@@ -4,6 +4,7 @@ import MapDashboard from "./pages/MapDashboard";
 import { LandingPage } from "./pages/LandingPage";
 import { NotFound } from "./pages/NotFound";
 import ThreadPage from "./pages/ThreadPage";
+import { LaporanPage } from "./pages/LaporanPage";
 
 // Dummy Pages (Nanti pindahkan ke file terpisah di folder /pages)
 const Notification = () => (
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <MapDashboard />,
+      },
+      {
+        path: "laporanku",
+        element: <LaporanPage />,
       },
       {
         path: "notifikasi",

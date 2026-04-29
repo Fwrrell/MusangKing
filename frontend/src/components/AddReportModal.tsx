@@ -22,6 +22,7 @@ import bandungGeoJSON from "@/data/3273-kota-bandung-level-kecamatan.json";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import { useNavigate } from "react-router-dom";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -67,6 +68,8 @@ export default function AddReportModal({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmiting, setIsSubmitting] = useState(false);
+
+  const navigate = useNavigate();
 
   const fetchAddressFromCoords = async (lat: number, lng: number) => {
     try {
@@ -247,6 +250,7 @@ export default function AddReportModal({
       "Laporan kamu berhasil dikirim, lihat progresnya di LaporanKu. Terima Kasih atas Laporannya. ",
     );
     onClose();
+    navigate("/app/laporanku");
   };
 
   if (!isOpen) return null;
@@ -278,7 +282,7 @@ export default function AddReportModal({
             </h1>
             <button
               onClick={onClose}
-              className=" -mr-2 text-[#415963] bg-zinc-100 hover:bg-zinc-200 p-2 rounded-full transition-colors"
+              className=" -mr-2 text-[#415963] bg-zinc-100 hover:bg-zinc-200 p-2 rounded-full transition-colors cursor-pointer"
             >
               <X size={28} />
             </button>
@@ -696,7 +700,7 @@ export default function AddReportModal({
                     address === "Menunggu lokasi..." ||
                     !isValidLocation)
                 }
-                className="bg-[#8fb0bc] md:bg-blue-600 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl shadow-slate-300 md:shadow-blue-200 hover:bg-[#7fa7b4] md:hover:bg-blue-700 disabled:opacity-50 disabled:grayscale transition-all"
+                className="bg-[#8fb0bc] md:bg-blue-600 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl shadow-slate-300 md:shadow-blue-200 hover:bg-[#7fa7b4] md:hover:bg-blue-700 disabled:opacity-50 disabled:grayscale transition-all cursor-pointer"
               >
                 <span className="hidden md:inline">
                   Lanjut ke Tahap {step + 1}
@@ -709,7 +713,7 @@ export default function AddReportModal({
               <button
                 onClick={handleSubmit}
                 disabled={isSubmiting}
-                className="bg-zinc-900 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl md:shadow-md hover:bg-zinc-800 disabled:opacity-70 flex items-center gap-2 transition-all"
+                className="bg-zinc-900 text-white px-10 md:px-6 py-5 md:py-2.5 rounded-[28px] md:rounded-xl text-xl md:text-sm font-extrabold md:font-bold shadow-xl md:shadow-md hover:bg-zinc-800 disabled:opacity-70 flex items-center gap-2 transition-all cursor-pointer"
               >
                 {isSubmiting ? (
                   <Loader2 size={16} className="animate-spin" />

@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createReport,
   getAdminReports,
+  getMyReports,
   getPublicReports,
   getReportBySlug,
   getReportStats,
@@ -15,6 +16,7 @@ import { verifyToken } from "../middlewares/authMiddleware";
 export const reportRouter = Router();
 reportRouter.get("/", getPublicReports);
 reportRouter.get("/stats", getReportStats);
+reportRouter.get("/my-reports", getMyReports);
 reportRouter.get("/:slug", getReportBySlug);
 reportRouter.post("/", upload.single("image"), createReport);
 reportRouter.post("/:id/vote", toggleVote);

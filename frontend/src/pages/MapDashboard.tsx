@@ -372,7 +372,7 @@ export default function MapDashboard() {
 
           <button
             onClick={() => setIsReportOpen(true)}
-            className="group flex h-14 min-w-14 items-center justify-center gap-2 rounded-full bg-slate-900 px-4 text-white shadow-2xl shadow-slate-900/30 transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0 sm:h-16 sm:px-5"
+            className="group flex h-14 min-w-14 items-center justify-center gap-2 rounded-full bg-slate-900 px-4 text-white shadow-2xl shadow-slate-900/30 transition hover:-translate-y-0.5 hover:bg-slate-800 active:translate-y-0 sm:h-16 sm:px-5 cursor-pointer"
           >
             <Plus className="h-7 w-7 transition group-hover:rotate-90" />
           </button>
