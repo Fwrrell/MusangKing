@@ -5,14 +5,8 @@ import { LandingPage } from "./pages/LandingPage";
 import { NotFound } from "./pages/NotFound";
 import ThreadPage from "./pages/ThreadPage";
 import { LaporanPage } from "./pages/LaporanPage";
+import { StatistikPage } from "./pages/StatistikPage";
 
-// Dummy Pages (Nanti pindahkan ke file terpisah di folder /pages)
-const Notification = () => (
-  <h2 className="text-2xl text-black font-semibold">Notification</h2>
-);
-const Settings = () => (
-  <h2 className="text-2xl text-black font-semibold">Configuration</h2>
-);
 const router = createBrowserRouter([
   {
     path: "/",
@@ -33,12 +27,8 @@ const router = createBrowserRouter([
         element: <LaporanPage />,
       },
       {
-        path: "notifikasi",
-        element: <Notification />,
-      },
-      {
-        path: "settings",
-        element: <Settings />,
+        path: "statistik",
+        element: <StatistikPage />,
       },
     ],
   },

@@ -21,7 +21,7 @@ export default function UserLayouts() {
           </div>
         </header>
 
-        <div className="relative flex-1 overflow-hidden pb-24 md:pb-0">
+        <div className="relative flex-1 overflow-y-auto pb-24 md:pb-0">
           <Outlet />
         </div>
 

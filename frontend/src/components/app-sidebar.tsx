@@ -13,28 +13,26 @@ import {
 import {
   MapIcon,
   FileText,
-  Bell,
-  Info,
   BookOpen,
-  Settings,
+  LayoutDashboard,
+  ChartColumnIncreasing,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
+  { icon: LayoutDashboard, title: "Beranda", url: "/" },
   { icon: MapIcon, title: "Peta", url: "/app", primary: true },
   { icon: FileText, title: "Laporanku", url: "/app/laporanku" },
-  { icon: Bell, title: "Notifikasi", url: "/app/notifikasi" },
-  { icon: Info, title: "Tentang", url: "/app/info" },
+  { icon: ChartColumnIncreasing, title: "Statistik", url: "/app/statistik" },
   { icon: BookOpen, title: "Panduan", url: "/app/panduan" },
-  { icon: Settings, title: "Pengaturan", url: "/app/settings" },
 ];
 
 const mobileDockItems = [
+  { icon: LayoutDashboard, title: "Beranda", url: "/" },
   { icon: FileText, title: "Laporan", url: "/app/laporanku" },
-  { icon: Bell, title: "Notif", url: "/app/notifikasi" },
   { icon: MapIcon, title: "Peta", url: "/app", primary: true },
+  { icon: ChartColumnIncreasing, title: "Statistik", url: "/app/statistik" },
   { icon: BookOpen, title: "Panduan", url: "/app/panduan" },
-  { icon: Settings, title: "Setelan", url: "/app/settings" },
 ];
 
 export function AppSidebar() {
@@ -61,8 +59,8 @@ export function AppSidebar() {
             <SidebarMenu className="gap-2">
               {items.map((item) => {
                 const isActive =
-                  item.url === "/app"
-                    ? location.pathname === "/app"
+                  item.url === "/" || item.url === "/app"
+                    ? location.pathname === item.url
                     : location.pathname.startsWith(item.url);
 
                 return (
