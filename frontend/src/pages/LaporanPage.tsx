@@ -69,8 +69,7 @@ export function LaporanPage() {
 
       try {
         const response = await fetch(
-          // `${import.meta.env.VITE_API_URL}/api/reports/my-reports?deviceId=${deviceId}`,
-          `http://localhost:3000/api/reports/my-reports?deviceId=${deviceId}`,
+          `${import.meta.env.VITE_API_URL}/api/reports/my-reports?deviceId=${deviceId}`,
         );
         const result = await response.json();
 
