@@ -56,10 +56,11 @@ model Report {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
-  category   Category       @relation(fields: [categoryId], references: [id])
+  category   Category           @relation(fields: [categoryId], references: [id])
   reportLogs Report_Log[]
   votes      Vote[]
   entries    Report_Entry[]
+  assessment Report_Assessment?
 }
 
 model Report_Entry {
@@ -83,6 +84,23 @@ model Report_Log {
 
   report Report @relation(fields: [reportId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
+}
+
+model Report_Assessment {
+  id       String @id @default(uuid())
+  reportId String @unique
+
+  baseline_cost       Float
+  residual_cost       Float
+  implementation_cost Float
+  is_critical_rule    Boolean @default(false)
+
+  cba_score      Float
+  priority_score Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 }
 
 model Vote {

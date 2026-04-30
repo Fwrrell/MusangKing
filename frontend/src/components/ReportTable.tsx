@@ -1,230 +1,353 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Loader2,
+  AlertTriangle,
   ChevronRight,
   X,
   MapPin,
-  AlertTriangle,
   Calculator,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const reports = [
-  {
-    id: "K-12",
-    name: "Traffic Light Mati Simpang Soekarno Hatta",
-    location: "Kec. Bojongloa Kaler",
-    score: 0.82,
-    level: "CRITICAL",
-    desc: "Lampu lalu lintas mati total sejak 2 hari lalu, menyebabkan kemacetan parah dan rawan kecelakaan di jam sibuk.",
-    cost: "Rp 10.000.000",
-    cba: 1.5,
-    age: "25 Hari",
-    latlng: "-6.9382, 107.5938",
-  },
-  {
-    id: "K-25",
-    name: "Jalan Berlubang Dalam",
-    location: "Kec. Bandung Kulon",
-    score: 0.76,
-    level: "CRITICAL",
-    desc: "Lubang sedalam 15cm dengan diameter 1 meter di jalur utama angkutan umum.",
-    cost: "Rp 40.000.000",
-    cba: 1.5,
-    age: "20 Hari",
-    latlng: "-6.9211, 107.5642",
-  },
-  {
-    id: "K-18",
-    name: "Sambungan Jembatan Retak",
-    location: "Kec. Babakan Ciparay",
-    score: 0.68,
-    level: "HIGH",
-    desc: "Retakan memanjang di sisi kiri jembatan, butuh penanganan sebelum meluas.",
-    cost: "Rp 150.000.000",
-    cba: 0.67,
-    age: "30 Hari",
-    latlng: "-6.8904, 107.6115",
-  },
-  {
-    id: "K-15",
-    name: "Sambungan Jembatan Retak Sebagian",
-    location: "Kec. Coblong",
-    score: 0.48,
-    level: "HIGH",
-    desc: "Retakan memanjang di sisi kiri jembatan, butuh penanganan sebelum meluas.",
-    cost: "Rp 150.000.000",
-    cba: 0.67,
-    age: "30 Hari",
-    latlng: "-6.8904, 107.6115",
-  },
-  {
-    id: "K-10",
-    name: "Lampu penerangan mati",
-    location: "Kec. Lengkong",
-    score: 0.28,
-    level: "Low",
-    desc: "Retakan memanjang di sisi kiri jembatan, butuh penanganan sebelum meluas.",
-    cost: "Rp 5.000.000",
-    cba: 0.67,
-    age: "20 Hari",
-    latlng: "-6.8904, 107.6115",
-  },
-];
-export const ReportTable = () => {
-  const [selectedReport, setReport] = useState<any | null>(null);
-  const getBadgeColor = (level: string) => {
-    if (level === "critical") return "bg-red-100 text-red-700 border-red-200";
-    if (level === "high")
-      return "bg-orange-100 text-orange-700 border-orange-200";
-    return "bg-yellow-100 text-yellow-700 border-yellow-200";
+// Helper untuk menentukan warna & label berdasarkan Priority Score
+const getPriorityBadge = (score: number) => {
+  if (score >= 0.75)
+    return {
+      label: "CRITICAL",
+      class: "bg-red-50 text-red-700 border-red-200",
+    };
+  if (score >= 0.5)
+    return {
+      label: "HIGH",
+      class: "bg-orange-50 text-orange-700 border-orange-200",
+    };
+  if (score >= 0.25)
+    return {
+      label: "MEDIUM",
+      class: "bg-[#276fbf]/10 text-[#276fbf] border-[#276fbf]/20",
+    };
+  return {
+    label: "LOW",
+    class: "bg-slate-100 text-slate-700 border-slate-200",
   };
+};
+
+export function ReportTable() {
+  const [rankings, setRankings] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<any | null>(null);
+
+  useEffect(() => {
+    const fetchRankings = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/reports/rank-kecamatan",
+        );
+        const result = await response.json();
+
+        if (response.ok) {
+          setRankings(result.data);
+        }
+      } catch (error) {
+        console.error("Gagal mengambil data ranking:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRankings();
+  }, []);
+
+  const formatRupiah = (number: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(number);
+  };
+
   return (
     <>
-      <div className="w-full relative bg-slate-50 mt-10 p-8">
-        <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
-          <div className="text-center p-6 border-b border-gray-100">
-            <h3 className="font-bold text-2xl capitalize leading-[2]">
-              Ranking prioritas Laporan
+      <div className="w-full overflow-hidden rounded-[2rem] border border-[#276fbf]/10 bg-white shadow-xl shadow-[#23395b]/5">
+        <div className="flex flex-col gap-4 border-b border-[#276fbf]/10 bg-[#fbfef9] p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
+          <div>
+            <h3 className="text-lg font-black text-[#23395b]">
+              Ranking Prioritas Kecamatan
             </h3>
-            <p className="text-md text-gray-500 font-medium">
-              diurutkan dari skor prioritas tertinggi hingga terendah
+            <p className="mt-1 text-sm font-medium leading-6 text-slate-500">
+              Urutan wilayah berdasarkan skor prioritas dan efisiensi biaya
+              (CBA).
             </p>
           </div>
-          {/* table */}
-          <div className="overflow-x-auto p-8">
-            <table className="w-full text-center ">
-              <thead>
-                <tr className="bg-slate-50 text-gray-500 text-sm p-4">
-                  <th className="py-4 px-6 font-semibold w-16">No</th>
-                  <th className="py-4 px-6 font-semibold">Nama Laporan</th>
-                  <th className="py-4 px-6 font-semibold">Lokasi</th>
-                  <th className="py-4 px-6 font-semibold ">Skor Prioritas</th>
-                  <th className="py-4 px-6 font-semibold ">Detail</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {reports.map((report, index) => (
-                  <tr
-                    key={report.id}
-                    className="hover:bg-blue-50/80 transition-colors group cursor-pointer"
-                    onClick={() => setReport(report)}
-                  >
-                    <td>{index + 1}</td>
-                    <td className="py-4 px-6 text-black-500 font-medium">
-                      {report.name}
-                    </td>
-                    <td className="py-4 px-6 text-gray-900">
-                      {report.location}
-                    </td>
-                    <td className="py-4 px-6 text-gray-500">{report.score}</td>
-                    <td className="py-4 px-6 text-center">
-                      <button className="p-2 bg-gray-50 rounded-full text-gray-400 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                        <ChevronRight size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
-        <AnimatePresence>
-          {selectedReport && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setReport(null)}
-                className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-              >
-                {/* pop up card */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-white rounded-[2rem] shadow-xl w-full max-w-lg overflow-hidden flex flex-col"
-                >
-                  <div className="p-6 border-b border-gray-100 flex justify-between items-start bg-slate-50">
-                    <div>
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-bold border mb-3 ${getBadgeColor(selectedReport.level)}`}
-                      >
-                        {selectedReport.level} (Score: {selectedReport.score})
-                      </span>
-                      <h2 className="text-xl font-bold text-gray-900 leading-tight">
-                        {selectedReport.name}
-                      </h2>
-                      <p className="text-sm text-gray-500 mt-1 flex items-center gap-2">
-                        <AlertTriangle size={14} /> ID Laporan:{" "}
-                        {selectedReport.id}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setReport(null)}
-                      className="p-2 bg-white rounded-full text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors shadow-sm"
+
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader className="bg-[#f6fbff]">
+              <TableRow className="hover:bg-[#f6fbff]">
+                <TableHead className="w-[80px] text-center font-extrabold text-[#23395b]">
+                  #
+                </TableHead>
+                <TableHead className="min-w-[180px] font-extrabold text-[#23395b]">
+                  Nama Kecamatan
+                </TableHead>
+                <TableHead className="min-w-[140px] font-extrabold text-[#23395b]">
+                  Skor Prioritas
+                </TableHead>
+                <TableHead className="min-w-[180px] font-extrabold text-[#23395b]">
+                  Banyak Kasus
+                </TableHead>
+                <TableHead className="min-w-[160px] font-extrabold text-[#23395b]">
+                  CBA
+                </TableHead>
+                <TableHead className="min-w-[120px] font-extrabold text-[#23395b]">
+                  Status
+                </TableHead>
+                <TableHead className="min-w-[100px] text-right font-extrabold text-[#23395b]">
+                  Detail
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-48 text-center">
+                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#276fbf]" />
+                    <p className="mt-3 text-sm font-semibold text-slate-500">
+                      Memuat ranking kecamatan...
+                    </p>
+                  </TableCell>
+                </TableRow>
+              ) : rankings.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-48 text-center">
+                    <p className="font-bold text-[#23395b]">
+                      Belum ada data ranking.
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Data prioritas kecamatan akan muncul setelah laporan
+                      tersedia.
+                    </p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rankings.map((kec, index) => {
+                  const priority = getPriorityBadge(kec.priorityKecamatan);
+                  const isTop3 = index < 3;
+
+                  return (
+                    <TableRow
+                      key={kec.name}
+                      onClick={() => setSelectedReport(kec)}
+                      className="cursor-pointer transition-colors hover:bg-[#f8fbff]"
                     >
-                      <X size={20} />
-                    </button>
-                  </div>
+                      <TableCell className="text-center">
+                        <span
+                          className={`inline-grid size-9 place-items-center rounded-full text-sm font-extrabold ${
+                            isTop3
+                              ? "bg-[#23395b] text-white shadow-md shadow-[#23395b]/20"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                      </TableCell>
 
-                  {/* description */}
-                  <div className="p-6 flex flex-col gap-5">
-                    <div>
-                      <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                        Deskripsi Kasus
-                      </h4>
-                      <p className="text-gray-700 text-sm leading-relaxed">
-                        {selectedReport.desc}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-slate-50 p-4 rounded-2xl border border-gray-100">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                          <MapPin size={14} /> Titik Lokasi
-                        </h4>
-                        <p className="font-semibold text-sm text-gray-800">
-                          {selectedReport.location}
-                        </p>
-                        <p className="text-xs text-blue-500 cursor-pointer hover:underline mt-1">
-                          {selectedReport.latlng}
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-50 p-4 rounded-2xl border border-gray-100">
-                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                          <Calculator size={14} /> Estimasi Lentera AI
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          Estimasi:{" "}
-                          <span className="font-semibold text-gray-900">
-                            {selectedReport.cost}
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-extrabold text-[#23395b]">
+                            {kec.name}
                           </span>
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Skor CBA:{" "}
-                          <span className="font-semibold text-gray-900">
-                            {selectedReport.cba}
+                          <span className="text-[11px] font-semibold text-slate-400">
+                            Populasi:{" "}
+                            {kec.populasi?.toLocaleString("id-ID") || 0} jiwa
                           </span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* button */}
-                  <div className="p-6 pt-0 mt-2">
-                    <button className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-md shadow-blue-200 transition-colors">
-                      Tindak Lanjuti Sekarang
-                    </button>
-                  </div>
-                </motion.div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="font-black text-[#276fbf]">
+                        {kec.priorityKecamatan.toFixed(2)}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-sm font-bold text-slate-600">
+                            {kec.totalCases} Kasus Aktif
+                          </span>
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        <span className="text-xs font-black text-[#276fbf]">
+                          {kec.cbaKecamatan.toFixed(2)}
+                        </span>
+                      </TableCell>
+
+                      <TableCell>
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-black ${priority.class}`}
+                        >
+                          {priority.label === "CRITICAL" && (
+                            <AlertTriangle size={12} />
+                          )}
+                          {priority.label}
+                        </span>
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <button
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedReport(kec);
+                          }}
+                          className="inline-grid size-9 place-items-center rounded-full bg-[#276fbf]/10 text-[#276fbf] transition hover:bg-[#276fbf] hover:text-white"
+                        >
+                          <ChevronRight size={18} />
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
+
+      <AnimatePresence>
+        {selectedReport && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedReport(null)}
+            className="fixed inset-0 z-[9999] flex items-end justify-center bg-[#23395b]/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(event) => event.stopPropagation()}
+              className="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[2rem] bg-white shadow-2xl sm:rounded-[2rem]"
+            >
+              <div className="flex items-start justify-between gap-4 border-b border-[#276fbf]/10 bg-[#fbfef9] p-5 sm:p-6">
+                <div>
+                  <span
+                    className={`mb-3 inline-flex rounded-full border px-3 py-1 text-xs font-extrabold ${
+                      getPriorityBadge(selectedReport.priorityKecamatan).class
+                    }`}
+                  >
+                    {getPriorityBadge(selectedReport.priorityKecamatan).label}{" "}
+                    (Score: {selectedReport.priorityKecamatan.toFixed(2)})
+                  </span>
+
+                  <h2 className="text-xl font-black leading-tight text-[#23395b]">
+                    {selectedReport.name}
+                  </h2>
+
+                  <p className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-500">
+                    <AlertTriangle size={14} />
+                    ID Kecamatan: {selectedReport.id}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setSelectedReport(null)}
+                  className="grid size-10 shrink-0 place-items-center rounded-full bg-white text-slate-400 shadow-sm transition hover:bg-red-50 hover:text-red-500"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-5 overflow-y-auto p-5 sm:p-6">
+                <div>
+                  <h4 className="mb-2 text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                    Ringkasan Wilayah
+                  </h4>
+                  <p className="text-sm leading-7 text-slate-600">
+                    Kecamatan{" "}
+                    <span className="font-bold text-[#23395b]">
+                      {selectedReport.name}
+                    </span>{" "}
+                    memiliki{" "}
+                    <span className="font-bold text-[#23395b]">
+                      {selectedReport.totalCases} kasus aktif
+                    </span>{" "}
+                    dengan skor prioritas{" "}
+                    <span className="font-black text-[#276fbf]">
+                      {selectedReport.priorityKecamatan.toFixed(2)}
+                    </span>
+                    .
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-[#276fbf]/10 bg-[#f6fbff] p-4">
+                    <h4 className="mb-1 flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                      <MapPin size={14} />
+                      Data Kecamatan
+                    </h4>
+
+                    <p className="text-sm font-bold text-[#23395b]">
+                      {selectedReport.name}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                      Populasi:{" "}
+                      <span className="font-bold text-[#23395b]">
+                        {selectedReport.populasi?.toLocaleString("id-ID") || 0}{" "}
+                        jiwa
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                      Kasus:{" "}
+                      <span className="font-bold text-[#23395b]">
+                        {selectedReport.totalCases} Aktif
+                      </span>
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#276fbf]/10 bg-[#f6fbff] p-4">
+                    <h4 className="mb-1 flex items-center gap-1 text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                      <Calculator size={14} />
+                      Estimasi Lentera AI
+                    </h4>
+
+                    <p className="text-sm font-bold text-[#23395b]">
+                      Skor CBA: {selectedReport.cbaKecamatan}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                      Estimasi Kerugian:{" "}
+                      <span className="font-bold text-[#23395b]">
+                        {formatRupiah(selectedReport.totalBenefit || 0)}{" "}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                      Estimasi Perbaikan:{" "}
+                      <span className="font-bold text-[#23395b]">
+                        {formatRupiah(
+                          selectedReport.totalImplementationCost || 0,
+                        )}{" "}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
-};
+}
+
 export default ReportTable;

@@ -3,7 +3,6 @@ import prisma from "../lib/prisma";
 import { getDistance } from "../utils/geoutils";
 import { upImageReport } from "../services/storageService";
 import { analyzeReport } from "../services/geminiService";
-import { resourceLimits } from "node:worker_threads";
 
 export const createReport = async (
   req: Request,
@@ -105,7 +104,15 @@ export const createReport = async (
     }
 
     // jika tidak ada laporan terdekat bikin pin baru
-    const uniqueSlug = `${aiResult.headline.toLowerCase().replace(/ /g, "-")}-${Date.now()}`;
+    const uniqueSlug = `${aiResult.headline.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+
+    // hitung CBA Score mentah
+    // Rumus: (Baseline Cost - Residual Cost) / Implementation Cost
+    const baseline = Number(aiResult.baseline_cost) || 0;
+    const residual = Number(aiResult.residual_cost) || 0;
+    const implementation = Number(aiResult.implementation_cost) || 1;
+
+    const cbaScore = (baseline - residual) / implementation;
 
     const newReport = await prisma.report.create({
       data: {
@@ -118,7 +125,7 @@ export const createReport = async (
         slug: uniqueSlug,
         ai_headline: aiResult.headline,
         description: aiResult.filtered_description,
-        estimated_cost: aiResult.estimated_cost,
+        estimated_cost: implementation,
         moderation_status: "approved", // ini status yang dihasilkan dari ai, artinya validasi report aja
         status: "pending", // ini status yang dihasilkan dari pemerintah/admin (verified/in_progres/resolved/rejected)
         entries: {
@@ -127,9 +134,19 @@ export const createReport = async (
             description: aiResult.filtered_description,
           },
         },
+        assessment: {
+          create: {
+            baseline_cost: baseline,
+            residual_cost: residual,
+            implementation_cost: implementation,
+            is_critical_rule: aiResult.is_critical_rule || false,
+            cba_score: cbaScore,
+          },
+        },
       },
       include: {
         entries: true,
+        assessment: true,
       },
     });
 

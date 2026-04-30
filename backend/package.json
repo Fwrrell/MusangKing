@@ -17,6 +17,8 @@
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@supabase/supabase-js": "^2.103.0",
+    "@turf/boolean-point-in-polygon": "^7.3.5",
+    "@turf/helpers": "^7.3.5",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "crypto": "^1.0.1",
