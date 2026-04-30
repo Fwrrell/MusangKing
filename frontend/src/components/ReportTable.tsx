@@ -49,7 +49,7 @@ export function ReportTable() {
     const fetchRankings = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/reports/rank-kecamatan",
+          `${import.meta.env.VITE_API_URL}/api/reports/rank-kecamatan`,
         );
         const result = await response.json();
 
